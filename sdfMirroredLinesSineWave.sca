@@ -1,0 +1,34 @@
+using namespace std;
+
+#import <sdf>
+
+
+
+vec4 main(Texture2d tex0, float frequency, float amplitude, float twist) {
+  // get uv texture coordinates
+  vec2 uv = fragment(getVertexTexCoord());
+  // animate on continous loop
+  float time = sin(getTime()/2.);
+
+  // create a sine wave to distort our texture coord
+  float sineWave = sin(uv.x * frequency + time) * amplitude;
+  vec2 distort = vec2(sineWave, 0.);
+  vec4 tex = tex0.sample(uv + distort);
+
+  // create hoizontal lines
+  auto sdf = sdfLine(vec2(0.5, 0.5), vec2(time, time + 1.), 0.004);
+  auto sdfMR = sdfMirroredRepeatX(sdf, vec2(0.5, 0.5), vec2(0.014, 0.016));
+  // create vertical line
+  auto sdfE = sdfLine(vec2(0.5, 0.5), vec2(0.5, 0.5), 0.1);
+  auto sdfT = sdfTwist(sdfE, vec2(0.5, 0.5), time + twist); 
+  auto sdfU = sdfSmoothUnion(sdfT,sdfMR, 0.1);
+  // asign to uv
+  float dist = sdfU(uv);
+  float edge = fwidth(dist);
+  float alpha = smoothstep(-edge, +edge, dist);
+
+
+  // return
+  return alpha * tex;
+
+}

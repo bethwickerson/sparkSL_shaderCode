@@ -1,0 +1,21 @@
+#import <gradients> 
+#import <sdf> 
+using namespace std;
+// Entry point of the shader code asset //
+// @param[default=#00FFFFFF] colorl
+// @param[default=#0000C0FF] color2 
+// @param[default=5.0,min=4.0,max=9.0] armCount
+// @return color
+vec4 main(vec4 colorl, vec4 color2, float armCount){
+    float time = sin(getTime()/0.9);
+    vec2 uv = fragment(getVertexTexCoord());
+    vec4 color = mix(colorl, color2, gradientHorizontal(uv));
+    auto sdf = sdfStarSharp(vec2(0.5, 0.5), 0.25, 0.50, floor(armCount));
+    auto sdfR = sdfTwist(sdf, vec2(.5, .5), time); 
+    auto sdfRR = sdfRotationalRepeat(sdfR, vec2(.5, .5), .033, 7.);
+    auto sdfU = sdfSmoothUnion(sdfR,sdfRR, 0.2);
+    float dist = sdfU(uv);
+    float edge = fwidth(dist); 
+    float alpha = smoothstep(-edge, +edge, dist);
+    return mix(color, color.rgb0, alpha); 
+}
